@@ -23,7 +23,10 @@
 #include "credential.h"
 
 
-void setup();
+//SYSTEM_MODE ( SEMI_AUTOMATIC );
+
+//ADAFRUIT.IO
+  void setup();
 void loop();
 void LaserPMRead();
 HM330XErrorCode print_result(const char* str, uint16_t value);
@@ -41,11 +44,8 @@ int Humidity();
 void SendEnviroData();
 void Subscribe();
 void FIREFIRE();
-#line 20 "/Users/wesleyeccles/Documents/IoT/Forest_Alert/ForestAlert_Fire_Warning_System/src/ForestAlert_Fire_Warning_System.ino"
-SYSTEM_MODE ( SEMI_AUTOMATIC );
-
-//ADAFRUIT.IO
-  TCPClient TheClient; 
+#line 23 "/Users/wesleyeccles/Documents/IoT/Forest_Alert/ForestAlert_Fire_Warning_System/src/ForestAlert_Fire_Warning_System.ino"
+TCPClient TheClient; 
 
   // Setup the MQTT client class by passing in the WiFi client and MQTT server and login details. 
   Adafruit_MQTT_SPARK mqtt(&TheClient,AIO_SERVER,AIO_SERVERPORT,AIO_USERNAME,AIO_KEY); 

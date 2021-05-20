@@ -17,7 +17,7 @@
 #include "credential.h"
 
 
-SYSTEM_MODE ( SEMI_AUTOMATIC );
+//SYSTEM_MODE ( SEMI_AUTOMATIC );
 
 //ADAFRUIT.IO
   TCPClient TheClient; 
