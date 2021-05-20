@@ -8,8 +8,8 @@
  * Project ForestAlert_Fire_Warning_System
  * Description: Early Warning Forest Fire Detection System
  * Author: Wesley Eccles <<www.wesleyeccles.com>>
- * Date: May 17, 2021
- * 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
+ * Date: May 20, 2021
+ * 🌲🌲🌲🌲🔥🔥🔥🔥🔥🔥🔥🌲🌲🌲🌲
  */
 
 #include <Seeed_HM330X.h>
@@ -21,17 +21,11 @@
 #include "Adafruit_MQTT/Adafruit_MQTT_SPARK.h" 
 #include "Adafruit_MQTT/Adafruit_MQTT.h" 
 #include "credential.h"
-//#include "Particle.h"
-
 
 void setup();
 void loop();
 void LaserPMRead();
-HM330XErrorCode print_result(const char* str, uint16_t value);
-HM330XErrorCode parse_result(uint8_t* data);
-HM330XErrorCode parse_result_value(uint8_t* data);
 void CirculateAir (unsigned int _runTime);
-void IRFireSensor();
 void GetGPS();
 void displayInfo();
 void createEventPayLoad ( float _lat , float _lon, float _alt, int _sat);
@@ -44,9 +38,8 @@ void Subscribe();
 void FIREFIRE();
 void SendBT();
 void onDataReceived(const uint8_t* data, size_t len, const BlePeerDevice& peer , void* context);
-#line 21 "/Users/wesleyeccles/Documents/IoT/Forest_Alert/ForestAlert_Fire_Warning_System/src/ForestAlert_Fire_Warning_System.ino"
+#line 19 "/Users/wesleyeccles/Documents/IoT/Forest_Alert/ForestAlert_Fire_Warning_System/src/ForestAlert_Fire_Warning_System.ino"
 SYSTEM_MODE ( SEMI_AUTOMATIC );
-
 
 //BLUETOOTH
   const BleUuid serviceUuid ("6E400001-B5A3-F393-E0A9-E50E24DCCA9E");
@@ -82,7 +75,7 @@ SYSTEM_MODE ( SEMI_AUTOMATIC );
 
 
 //SYSTEM
-   const int LEDPIN= D7;
+  const int LEDPIN= D7;
   unsigned int currentTime, lastTimeMain;
   unsigned int TIMEDELAY= 30000;    //Delay time for how often the system will send data to cloud (ms)
 
@@ -95,7 +88,6 @@ SYSTEM_MODE ( SEMI_AUTOMATIC );
   const int FANPIN = A3;
 
 //LASER PARTICLE SENSOR------------------------------------------------------------------------------------
-
   #define SERIAL_OUTPUT Serial 
   HM330X sensor;
   uint8_t buf[30];
@@ -136,7 +128,6 @@ void setup() {
 //BLuetooth
   BLE.on();
   Serial.printf("Argon BLE Address: %s\n", BLE.address().toString().c_str());
-
   BLE.addCharacteristic(txCharacteristic);
   BLE.addCharacteristic(rxCharacteristic);
   data.appendServiceUUID(serviceUuid);
@@ -193,7 +184,6 @@ void setup() {
     digitalWrite(LEDPIN,LOW);
     delay(250);
   }
-
 }
 
 
@@ -201,10 +191,6 @@ void loop() {
   KeepConnection();       //Keep Connection to the cloud alive 
   MQTT_connect();         //Keep Connection to the cloud alive 
   Subscribe();
-
-  
-
-
 
   if (FireAlert && IRSensor){
     if(mqtt.Update()) {
@@ -257,51 +243,6 @@ void LaserPMRead(){
 
 }
 
-HM330XErrorCode print_result(const char* str, uint16_t value) {
-    if (NULL == str) {
-        return ERROR_PARAM;
-    }
-    SERIAL_OUTPUT.print(str);
-    SERIAL_OUTPUT.println(value);
-    return NO_ERROR1;
-}
-
-HM330XErrorCode parse_result(uint8_t* data) {
-    uint16_t value = 0;
-    if (NULL == data) {
-        return ERROR_PARAM;
-    }
-    for (int i = 6; i < 8; i++) {
-        value = (uint16_t) data[i * 2] << 8 | data[i * 2 + 1];
-        print_result(str[i - 1], value);
-
-    }
-
-    return NO_ERROR1;
-}
-
-HM330XErrorCode parse_result_value(uint8_t* data) {
-    if (NULL == data) {
-        return ERROR_PARAM;
-    }
-    for (int i = 0; i < 28; i++) {
-        SERIAL_OUTPUT.print(data[i], HEX);
-        SERIAL_OUTPUT.print("  ");
-        if ((0 == (i) % 5) || (0 == i)) {
-          SERIAL_OUTPUT.println("");
-        }
-    }
-    uint8_t sum = 0;
-    for (int i = 0; i < 28; i++) {
-      sum += data[i];
-    }
-    if (sum != data[28]) {
-      SERIAL_OUTPUT.println("wrong checkSum!!!!");
-    }
-    SERIAL_OUTPUT.println("");
-    return NO_ERROR1;
-}
-
 void CirculateAir (unsigned int _runTime){                  //Funtion needs to keep being called to check against time
 
   digitalWrite(FANPIN,HIGH);           //Start the fan when funtion is called
@@ -309,16 +250,6 @@ void CirculateAir (unsigned int _runTime){                  //Funtion needs to k
   digitalWrite(FANPIN,LOW);           
   delay(1000);                         //Let the air in the chamber settle before taking data 
 
-}
-
-void IRFireSensor(){
-    int IR_FIRE_A;
-    bool IR_FIRE_D; 
-    
-    IR_FIRE_A= analogRead(IRPIN_A);
-    IR_FIRE_D= digitalRead(IRPIN_D);
-
-    Serial.printf("IR Fire Detector= %i  IR Fire= %i \n", IR_FIRE_A, IR_FIRE_D);
 }
 
 void GetGPS(){
@@ -463,37 +394,19 @@ void FIREFIRE(){                //Interupt Pin if the IR Light sees fire to send
 }
 
 void SendBT(){
-  //int tempAndMoistureLen;
   char tempHumBuf[12];
   uint8_t tempHumBufData[12];
   int tempAndMoistureLen;
-  
+
   sprintf(tempHumBuf,"%05.0f,%05i\n",tempF()*100,Humidity());
   tempAndMoistureLen = strlen(tempHumBuf);
-  //(uint8_t*)tempHumBuf;
-  //tempHumBuf[12-1]=13; // Append a carriage return to end of buffer
-
 
   for (int i=0; i<12; i++){
     tempHumBufData[i]= tempHumBuf[i];
     Serial.printf ("%c",tempHumBufData[i]);
   }
-
-
-
-  
-
-
-
   txCharacteristic.setValue (tempHumBufData, 12 );
-  for(int i =0;i< tempAndMoistureLen; i ++) {
-    //Serial.printf ("%i",tempHumBufData [i]);
-  }
-  
   Serial.printf ("\n");
-
-
-delay(3000);
 }
 
 void onDataReceived(const uint8_t* data, size_t len, const BlePeerDevice& peer , void* context) {
