@@ -9,7 +9,7 @@
  * Description: Early Warning Forest Fire Detection System
  * Author: Wesley Eccles <<www.wesleyeccles.com>>
  * Date: May 17, 2021
- * 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
+ * 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
  */
 
 #include <Seeed_HM330X.h>
@@ -21,12 +21,10 @@
 #include "Adafruit_MQTT/Adafruit_MQTT_SPARK.h" 
 #include "Adafruit_MQTT/Adafruit_MQTT.h" 
 #include "credential.h"
+//#include "Particle.h"
 
 
-//SYSTEM_MODE ( SEMI_AUTOMATIC );
-
-//ADAFRUIT.IO
-  void setup();
+void setup();
 void loop();
 void LaserPMRead();
 HM330XErrorCode print_result(const char* str, uint16_t value);
@@ -44,8 +42,26 @@ int Humidity();
 void SendEnviroData();
 void Subscribe();
 void FIREFIRE();
-#line 23 "/Users/wesleyeccles/Documents/IoT/Forest_Alert/ForestAlert_Fire_Warning_System/src/ForestAlert_Fire_Warning_System.ino"
-TCPClient TheClient; 
+void SendBT();
+void onDataReceived(const uint8_t* data, size_t len, const BlePeerDevice& peer , void* context);
+#line 21 "/Users/wesleyeccles/Documents/IoT/Forest_Alert/ForestAlert_Fire_Warning_System/src/ForestAlert_Fire_Warning_System.ino"
+SYSTEM_MODE ( SEMI_AUTOMATIC );
+
+
+//BLUETOOTH
+  const BleUuid serviceUuid ("6E400001-B5A3-F393-E0A9-E50E24DCCA9E");
+  const BleUuid rxUuid ("6E400002-B5A3-F393-E0A9-E50E24DCCA9E");
+  const BleUuid txUuid ("6E400003-B5A3-F393-E0A9-E50E24DCCA9E");
+
+  BleCharacteristic txCharacteristic("tx", BleCharacteristicProperty::NOTIFY ,txUuid ,serviceUuid );
+  BleCharacteristic rxCharacteristic("rx", BleCharacteristicProperty::WRITE_WO_RSP ,rxUuid ,serviceUuid ,onDataReceived ,NULL);
+  BleAdvertisingData data;
+  const size_t UART_TX_BUF_SIZE = 19;
+  uint8_t txBuf[UART_TX_BUF_SIZE]= "Pixel Number =  ";  
+  
+
+//ADAFRUIT.IO
+  TCPClient TheClient; 
 
   // Setup the MQTT client class by passing in the WiFi client and MQTT server and login details. 
   Adafruit_MQTT_SPARK mqtt(&TheClient,AIO_SERVER,AIO_SERVERPORT,AIO_USERNAME,AIO_KEY); 
@@ -99,24 +115,34 @@ TCPClient TheClient;
   unsigned status;
 
 // GPS --------------------------------------------------------------------------------------------------
-TinyGPSPlus gps;
-const int UTC_offset = -6; 
-unsigned long lastSerial = 0;
-unsigned long lastPublish = 0;
-unsigned long startFix = 0;
-bool gettingFix = false;
-float lat,lon,alt;
+  TinyGPSPlus gps;
+  const int UTC_offset = -6; 
+  unsigned long lastSerial = 0;
+  unsigned long lastPublish = 0;
+  unsigned long startFix = 0;
+  bool gettingFix = false;
+  float lat,lon,alt;
 
-SYSTEM_THREAD(ENABLED);
-const unsigned long PUBLISH_PERIOD = 1000;
-const unsigned long SERIAL_PERIOD = 5000;
-const unsigned long MAX_GPS_AGE_MS = 1000; // GPS location must be newer than this to be considered valid
+  SYSTEM_THREAD(ENABLED);
+  const unsigned long PUBLISH_PERIOD = 1000;
+  const unsigned long SERIAL_PERIOD = 5000;
+  const unsigned long MAX_GPS_AGE_MS = 1000; // GPS location must be newer than this to be considered valid
 
 void setup() {
   Serial.begin(9600);
   delay(1000);
   Serial.println("Serial start");
 
+//BLuetooth
+  BLE.on();
+  Serial.printf("Argon BLE Address: %s\n", BLE.address().toString().c_str());
+
+  BLE.addCharacteristic(txCharacteristic);
+  BLE.addCharacteristic(rxCharacteristic);
+  data.appendServiceUUID(serviceUuid);
+  BLE.advertise(&data); 
+
+//WIFI
   Serial.printf("Connecting to Internet \n");
   WiFi.connect();
   while(WiFi.connecting()) {
@@ -125,12 +151,10 @@ void setup() {
   }
   Serial.printf("\nConnected!!!!!! \n");
 
-  // // Setup MQTT subscription for onoff feed.
+// Setup MQTT subscription for onoff feed.
   mqtt.subscribe(&DELAYFREQUENCY);
   mqtt.subscribe(&IRSENSOR);
-  // mqtt.subscribe(&SERVOPOS);
-  // mqtt.subscribe(&COLOR);
-
+  
 //GPS 
     Serial1.begin(9600);
     startFix = millis();
@@ -177,6 +201,10 @@ void loop() {
   KeepConnection();       //Keep Connection to the cloud alive 
   MQTT_connect();         //Keep Connection to the cloud alive 
   Subscribe();
+
+  
+
+
 
   if (FireAlert && IRSensor){
     if(mqtt.Update()) {
@@ -404,6 +432,7 @@ int Humidity(){
 }
 
 void SendEnviroData(){
+   SendBT();
    if(mqtt.Update()) {
     TEMP.publish(tempF());
     Serial.printf("Publishing TempF %.1ff\n",tempF()); 
@@ -431,4 +460,44 @@ void Subscribe(){
 
 void FIREFIRE(){                //Interupt Pin if the IR Light sees fire to send one last signal that there is a fire before burning 
  FireAlert=1;
+}
+
+void SendBT(){
+  //int tempAndMoistureLen;
+  char tempHumBuf[12];
+  uint8_t tempHumBufData[12];
+  int tempAndMoistureLen;
+  
+  sprintf(tempHumBuf,"%05.0f,%05i\n",tempF()*100,Humidity());
+  tempAndMoistureLen = strlen(tempHumBuf);
+  //(uint8_t*)tempHumBuf;
+  //tempHumBuf[12-1]=13; // Append a carriage return to end of buffer
+
+
+  for (int i=0; i<12; i++){
+    tempHumBufData[i]= tempHumBuf[i];
+    Serial.printf ("%c",tempHumBufData[i]);
+  }
+
+
+
+  
+
+
+
+  txCharacteristic.setValue (tempHumBufData, 12 );
+  for(int i =0;i< tempAndMoistureLen; i ++) {
+    //Serial.printf ("%i",tempHumBufData [i]);
+  }
+  
+  Serial.printf ("\n");
+
+
+delay(3000);
+}
+
+void onDataReceived(const uint8_t* data, size_t len, const BlePeerDevice& peer , void* context) {
+  size_t i;
+  int pos=0;
+  Serial.printf("Received data from: %02X :%02X :%02X :%02X :%02X :%02X \n", peer.address()[0], peer.address()[1] ,peer.address()[2] , peer.address()[3] ,peer.address()[4] ,peer.address()[5]) ;
 }
