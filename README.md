@@ -8,29 +8,29 @@
 
 ## The devastation of Forest Fires
 
-*In 2020 there were 58,950 wildfires
-*~10.1 million acres were burned across the US
-*4.5 million US homes currently face high/extreme wildfire risk
-*The US 2020 fire season cost $130 - $150 billion in damages
+* In 2020 there were 58,950 wildfires
+* ~10.1 million acres were burned across the US
+* 4.5 million US homes currently face high/extreme wildfire risk
+* The US 2020 fire season cost $130 - $150 billion in damages
 
-##Capabilities:
+## Capabilities:
 
-*Early Warning Fire Detection
-*Deep Forest Access
-*Easy to Install
-*No Maintenance
-*Low Cost
-*Scaleable
-*Weather Data Tracking
-*No Reception Required
+* Early Warning Fire Detection
+* Deep Forest Access
+* Easy to Install
+* No Maintenance
+* Low Cost
+* Scaleable
+* Weather Data Tracking
+* No Reception Required
 
-##Furture Upgrades 
-*Smaller Package
-*Cheaper per Device
-*Custom PCB
-*Compostable Parachute (try and leave as little waste as possible)
-*Cloud ML program to analyze the data and determine fire scenario
-*Integrate into other fire detection systems
-*Hikers Expiration Date Tag (remove from spot if past set amount of time)
+## Furture Upgrades 
+* Smaller Package
+* Cheaper per Device
+* Custom PCB
+* Compostable Parachute (try and leave as little waste as possible)
+* Cloud ML program to analyze the data and determine fire scenario
+* Integrate into other fire detection systems
+* Hikers Expiration Date Tag (remove from spot if past set amount of time)
 
 [Hackster.IO](https://www.hackster.io/wesley-eccles/forest-alert-fire-detection-195fe0)
